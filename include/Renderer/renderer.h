@@ -59,14 +59,21 @@ public:
     // Initialize context, load GL functions, compile shaders
     void init();
 
+    // check if the window should close (program end)
+    bool shouldClose() const;
+
     // Register a sphere instance at a position (uploads mesh if needed)
     void drawSphere(Sphere& sphere, glm::vec3 position);
 
-    // Main loop (poll events, render, swap buffers)
-    void runRenderLoop();
+    // Render a single frame (poll events, render, swap buffers)
+    void RenderFrame();
 
     // Access underlying GLFW window (e.g., for additional user logic)
     GLFWwindow* getWindow();
+
+    // Release GL + GLFW resources
+    void cleanup();
+
 
 private:
     // --- Core state ---
@@ -103,7 +110,6 @@ private:
                               double xpos, double ypos);          // Static → instance redirect
     void handleMouse(double xpos, double ypos);                   // Apply mouse delta to camera
     void displayFrameRate(float deltaTime) const;                 // Title bar FPS update
-    void cleanup();                                               // Release GL + GLFW resources
 };
 
 #endif

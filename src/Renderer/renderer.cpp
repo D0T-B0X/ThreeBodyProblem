@@ -18,6 +18,10 @@ void Renderer::init() {
     ourShader.load(VSHADER_PATH, FSHADER_PATH);
 }
 
+bool Renderer::shouldClose() const {
+    return glfwWindowShouldClose(window);
+}
+
 // Register a sphere for rendering (lazy mesh upload / reuse)
 void Renderer::drawSphere(Sphere& sphere, glm::vec3 position) {
     sphere.Position = position;
@@ -27,65 +31,65 @@ void Renderer::drawSphere(Sphere& sphere, glm::vec3 position) {
 }
 
 // Main render loop
-void Renderer::runRenderLoop() {
-    while(!glfwWindowShouldClose(window)) {
-        // Frame timing
-        float currentFrame = (float)glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+void Renderer::RenderFrame() {
+    // Frame timing
+    float currentFrame = (float)glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
 
-        displayFrameRate(deltaTime);
-        processKeyboardInput(window);
+    displayFrameRate(deltaTime);
+    processKeyboardInput(window);
 
-        // Clear frame
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Clear frame
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Bind shader + upload camera matrices
-        ourShader.use();
-        generateCameraView();
+    // Bind shader + upload camera matrices
+    ourShader.use();
+    generateCameraView();
 
-        // Provide light + view uniforms (light position may change below for animated light)
-        glm::vec3 lightPos = lightSphere ? lightSphere->Position : glm::vec3(5.0f, 5.0f, 5.0f);
-        ourShader.setVec3("lightPos", lightPos);
-        ourShader.setVec3("viewPos", camera.Position);
+    // Provide light + view uniforms (light position may change below for animated light)
+    glm::vec3 lightPos = lightSphere ? lightSphere->Position : glm::vec3(5.0f, 5.0f, 5.0f);
+    ourShader.setVec3("lightPos", lightPos);
+    ourShader.setVec3("viewPos", camera.Position);
 
-        // Draw all non-light spheres (lit objects)
-        for(Sphere* s : spheres) {
-            if (s == lightSphere) continue; // skip light marker here
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
-            ourShader.setBool("source", s->source); // normally false here
-            ourShader.setVec3("inColor", s->Color);
-            ourShader.setMat4("model", model);
-            glBindVertexArray(s->mesh.VAO);
-            glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
-        }
+    // Draw all non-light spheres (lit objects)
+    for(Sphere* s : spheres) {
+        if (s == lightSphere) continue; // skip light marker here
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
+        ourShader.setBool("source", s->source); // normally false here
+        ourShader.setVec3("inColor", s->Color);
+        ourShader.setMat4("model", model);
+        glBindVertexArray(s->mesh.VAO);
+        glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+    }
 
-        // Draw / animate the light sphere (emissive)
-        if (lightSphere) {
-            Sphere* s = lightSphere;
+    // Draw / animate the light sphere (emissive)
+    if (lightSphere) {
+        Sphere* s = lightSphere;
 
-            ourShader.setVec3("lightPos", s->Position); // refresh light position for shading
+        ourShader.setVec3("lightPos", s->Position); // refresh light position for shading
 
-            // Build model (translate + shrink)
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
+        // Build model (translate + shrink)
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
 
-            // Source branch in fragment shader: emissive
-            ourShader.setBool("source", s->source);
-            ourShader.setVec3("inColor", s->Color);   // emissive tint
-            ourShader.setVec3("lightColor", s->Color);
-            ourShader.setMat4("model", model);
+        // Source branch in fragment shader: emissive
+        ourShader.setBool("source", s->source);
+        ourShader.setVec3("inColor", s->Color);   // emissive tint
+        ourShader.setVec3("lightColor", s->Color);
+        ourShader.setMat4("model", model);
 
-            glBindVertexArray(s->mesh.VAO);
-            glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
-        }
+        glBindVertexArray(s->mesh.VAO);
+        glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+    }
 
-        glBindVertexArray(0);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    } 
+    glBindVertexArray(0);
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+}
 
-    cleanup();
+GLFWwindow* Renderer::getWindow() {
+    return window;
 }
 
 // Initialize GLFW and request core profile context

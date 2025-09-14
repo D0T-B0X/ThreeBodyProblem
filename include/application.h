@@ -7,7 +7,28 @@ class App{
 public:
     App() {
         renderer.init();
+    }
 
+    void run() {
+
+        setupProgram();
+
+        while(!renderer.shouldClose()) {
+            renderer.RenderFrame();
+        }
+
+        cleanup();
+    }
+
+private:
+    Renderer renderer;
+
+    Sphere ball_one;
+    Sphere ball_two;
+    Sphere ball_three;
+    Sphere light;
+
+    void setupProgram() {
         ball_one.Name = "Ball One";
         ball_one.source = false;
         ball_one.Color = {0.1f, 0.54f, 1.0f};
@@ -34,17 +55,9 @@ public:
         renderer.drawSphere(light, {3.0f, 3.0f, 2.0f});
     }
 
-    void run() {
-        renderer.runRenderLoop();
+    void cleanup() {
+        renderer.cleanup();
     }
-
-private:
-    Renderer renderer;
-
-    Sphere ball_one;
-    Sphere ball_two;
-    Sphere ball_three;
-    Sphere light;
 };
 
 #endif
