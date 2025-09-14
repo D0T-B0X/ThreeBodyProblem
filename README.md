@@ -102,7 +102,7 @@ Renderer will read updated positions each frame.
 
 ## Quality / Performance Notes
 - Current integrator: none (static placement). First addition will include fixed timestep logic decoupled from render delta.
-- Sphere geometry is static; consider instancing if body count grows.
+- Sphere geometry is static.
 - Collision handling initially naive (pairwise sphere intersection).
 
 ## License
