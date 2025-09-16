@@ -9,47 +9,9 @@
 
 #include "shader.h"         // Shader wrapper (compile / link / uniform helpers)
 #include "camera.h"         // FPS style camera
-#include "cubesphere.h"     // CPU sphere (cube → sphere) geometry generator
+#include "mesh.h"
 #include "settings.h"       // Global settings (screen size, FOV, etc.)
 #include "config.h"         // CMake‑generated (paths, if any)
-
-// Simple GPU mesh container (one VAO/VBO/EBO + index count)
-struct Mesh {
-    unsigned int VBO = 0;
-    unsigned int VAO = 0;
-    unsigned int EBO = 0;
-    int          indexCount = 0;
-};
-
-// Sphere instance: owns CPU geometry + its GPU mesh + render properties
-struct Sphere {
-    CubeSphere   geometry;          // Procedural vertex/index data (CPU side)
-    Mesh         mesh;              // Uploaded GPU buffers (lazy created)
-    glm::vec3    Color{1.0f};       // Base albedo / emissive tint
-    glm::vec3    Position{0.0f};    // World position (no rotation/scale here)
-    std::string  Name;              // Debug name
-    bool         source = false;    // True = treated as light/emissive
-    bool         remake = true;     // True = geometry changed, needs re-upload
-
-    // Default: unit radius sphere
-    Sphere() : geometry(1.0f) {}
-
-    Sphere(std::string& name, float radius, glm::vec3 color)
-        : geometry(radius), Name(name), Color(color) {}
-
-    Sphere(std::string& name, float radius, glm::vec3 color, glm::vec3 lighting)
-        : geometry(radius), Name(name), Color(color), Position(lighting) {}
-
-    // Mark geometry dirty when parameters change
-    void setRadius(float radius) {
-        geometry.setRadius(radius);
-        remake = true;
-    }
-    void setSubdivisions(unsigned int subs) {
-        geometry.setSubdivisions(subs);
-        remake = true;
-    }
-};
 
 // Renderer: owns window, GL context, shader, camera, and sphere registry
 class Renderer {
@@ -65,8 +27,13 @@ public:
     // Register a sphere instance at a position (uploads mesh if needed)
     void drawSphere(Sphere& sphere, glm::vec3 position);
 
+    void drawSurface(Surface& surface);
+
     // Render a single frame (poll events, render, swap buffers)
     void RenderFrame();
+
+    // public API to close the renderer without keyboard input.
+    void closeRenderer();
 
     // Access underlying GLFW window (e.g., for additional user logic)
     GLFWwindow* getWindow();
@@ -86,6 +53,7 @@ private:
 
     // Pointer to the sphere acting as light source
     Sphere* lightSphere = nullptr;
+    Surface* baseSurface = nullptr;
 
     // Mouse state
     float lastX = SCR_WIDTH / 2.0f;
@@ -103,6 +71,7 @@ private:
     void loadGLAD();                                              // Load GL function pointers
     void generateCameraView();                                    // Upload view/projection matrices
     void setupSphereVertexBuffer(Sphere& sphere);                 // Lazy (re)upload sphere mesh
+    void setupSurfaceVertexBuffer(Surface& surface);
     static void frameBufferSizeCallback(GLFWwindow* window,
                                         int width, int height);   // Resize viewport
     void processKeyboardInput(GLFWwindow* window);                // WASD / vertical movement

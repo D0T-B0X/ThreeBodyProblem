@@ -1,69 +1,69 @@
-#include "Renderer/cubesphere.h"
+#include "Renderer/Sphere3D.h"
 
 // Default constructor: creates sphere with radius 1 and 16 subdivisions
-CubeSphere::CubeSphere() : Radius(1.0f), Subdivisions(16) {
+Sphere3D::Sphere3D() : Radius(1.0f), Subdivisions(16) {
     generateSphere();
 }
 
 // Constructor with custom radius (default subdivisions 16)
-CubeSphere::CubeSphere(float radius) : Radius(radius), Subdivisions(16) {
+Sphere3D::Sphere3D(float radius) : Radius(radius), Subdivisions(16) {
     generateSphere();
 }
 
 // Constructor with custom radius and subdivisions
-CubeSphere::CubeSphere(float radius, unsigned int subs) : Radius(radius), Subdivisions(subs) {
+Sphere3D::Sphere3D(float radius, unsigned int subs) : Radius(radius), Subdivisions(subs) {
     generateSphere();
 }
 
 // Set sphere radius and rebuild geometry
-void CubeSphere::setRadius(float radius) {
+void Sphere3D::setRadius(float radius) {
     Radius = radius;
     generateSphere();
 }
 
 // Set subdivision level and rebuild geometry
-void CubeSphere::setSubdivisions(unsigned int subs) {
+void Sphere3D::setSubdivisions(unsigned int subs) {
     Subdivisions = subs;
     generateSphere();
 }
 
 // Return pointer to vertex buffer (positions)
-const float* CubeSphere::getVertexData() const {
+const float* Sphere3D::getVertexData() const {
     return Vertices.data();
 }
 
 // Return pointer to index buffer
-const unsigned int* CubeSphere::getIndexData() const{
+const unsigned int* Sphere3D::getIndexData() const{
     return Indices.data();
 }
 
 // Return vertex buffer size in bytes
-const size_t CubeSphere::getVertexDataSize() const {
+const size_t Sphere3D::getVertexDataSize() const {
     return Vertices.size() * sizeof(float);
 }
 
 // Return index buffer size in bytes
-const size_t CubeSphere::getIndexDataSize() const {
+const size_t Sphere3D::getIndexDataSize() const {
     return Indices.size() * sizeof(unsigned int);
 }
 
 // Return total number of indices
-const size_t CubeSphere::getIndexCount() const {
+const size_t Sphere3D::getIndexCount() const {
     return Indices.size();
 }
 
 // Return current subdivision level
-const unsigned int CubeSphere::getSubdivisions() const {
+const unsigned int Sphere3D::getSubdivisions() const {
     return Subdivisions;
 }
 
 // Return current radius
-const float CubeSphere::getRadius() const {
+const float Sphere3D::getRadius() const {
     return Radius;
 }
 
 // Build all vertex positions by projecting cube faces to a sphere
-void CubeSphere::buildVertices() {
+void Sphere3D::buildVertices() {
     float n[3];
     float tmpV[3];
     std::vector<float> vertices; // per-face temporary positions
@@ -93,7 +93,7 @@ void CubeSphere::buildVertices() {
 }
 
 // Generate grid vertices for a single cube face
-std::vector<float> CubeSphere::buildFaceVertices(Face face, float sign) {
+std::vector<float> Sphere3D::buildFaceVertices(Face face, float sign) {
     std::vector<float> vertices;
     int fixedAxis, hAxis, vAxis;
 
@@ -122,7 +122,7 @@ std::vector<float> CubeSphere::buildFaceVertices(Face face, float sign) {
 }
 
 // Build triangle indices for all faces
-void CubeSphere::calculateIndices() {
+void Sphere3D::calculateIndices() {
     unsigned int tl, tr, bl, br;    // quad corners
     unsigned int i1[3], i2[3];      // two triangles per quad
 
@@ -151,21 +151,21 @@ void CubeSphere::calculateIndices() {
 }
 
 // Append one vertex position
-void CubeSphere::addVertices(const float n[3]) {
+void Sphere3D::addVertices(const float n[3]) {
     Vertices.push_back(n[0]);
     Vertices.push_back(n[1]);
     Vertices.push_back(n[2]);
 }
 
 // Append one triangle (3 indices)
-void CubeSphere::addIndices(const unsigned int i[3]) {
+void Sphere3D::addIndices(const unsigned int i[3]) {
     Indices.push_back(i[0]);
     Indices.push_back(i[1]);
     Indices.push_back(i[2]);
 }
 
 // Scale a 3D vector by radius
-float* CubeSphere::scaleVectors(float v[3], float radius) {
+float* Sphere3D::scaleVectors(float v[3], float radius) {
     v[0] *= radius;
     v[1] *= radius;
     v[2] *= radius;
@@ -173,7 +173,7 @@ float* CubeSphere::scaleVectors(float v[3], float radius) {
 }
 
 // Normalize a 3D vector (safe check for near-zero magnitude)
-void CubeSphere::normalizeVectors(const float v[3], float n[3]) {
+void Sphere3D::normalizeVectors(const float v[3], float n[3]) {
     const float EPSILON = 0.000001f;
     float mag = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
     if (mag > EPSILON) {
@@ -185,7 +185,7 @@ void CubeSphere::normalizeVectors(const float v[3], float n[3]) {
 }
 
 // Regenerate all sphere data (vertices + indices)
-void CubeSphere::generateSphere() {
+void Sphere3D::generateSphere() {
     clearArrays();
 
     if (Subdivisions < 1) {
@@ -203,7 +203,7 @@ void CubeSphere::generateSphere() {
 }
 
 // Clear vertex and index storage
-void CubeSphere::clearArrays() {
+void Sphere3D::clearArrays() {
     Vertices.clear();
     Indices.clear();
 }

@@ -22,12 +22,21 @@ bool Renderer::shouldClose() const {
     return glfwWindowShouldClose(window);
 }
 
+void Renderer::closeRenderer() {
+    glfwSetWindowShouldClose(window, true);
+}
+
 // Register a sphere for rendering (lazy mesh upload / reuse)
 void Renderer::drawSphere(Sphere& sphere, glm::vec3 position) {
     sphere.Position = position;
     setupSphereVertexBuffer(sphere);       // uploads only if VAO==0 or remake==true
     spheres.push_back(&sphere);
     if (sphere.source) lightSphere = &sphere; // remember light source sphere
+}
+
+void Renderer::drawSurface(Surface& surface) {
+    baseSurface = &surface;
+    setupSurfaceVertexBuffer(surface);
 }
 
 // Main render loop
@@ -53,32 +62,31 @@ void Renderer::RenderFrame() {
     ourShader.setVec3("lightPos", lightPos);
     ourShader.setVec3("viewPos", camera.Position);
 
-    // Draw all non-light spheres (lit objects)
+
+
+    // set the emissive sphere color if one exists, default to 1 if not
+    if (lightSphere) {
+        Sphere* s = lightSphere;
+        ourShader.setVec3("lightColor", s->Color);
+    } else {
+        ourShader.setVec3("lightColor", glm::vec3(1.0f));
+    }
+
+    // Draw all spheres
     for(Sphere* s : spheres) {
-        if (s == lightSphere) continue; // skip light marker here
         glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
-        ourShader.setBool("source", s->source); // normally false here
+        ourShader.setBool("source", s->source);
         ourShader.setVec3("inColor", s->Color);
         ourShader.setMat4("model", model);
         glBindVertexArray(s->mesh.VAO);
         glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
     }
 
-    // Draw / animate the light sphere (emissive)
-    if (lightSphere) {
-        Sphere* s = lightSphere;
-
-        ourShader.setVec3("lightPos", s->Position); // refresh light position for shading
-
-        // Build model (translate + shrink)
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
-
-        // Source branch in fragment shader: emissive
-        ourShader.setBool("source", s->source);
-        ourShader.setVec3("inColor", s->Color);   // emissive tint
-        ourShader.setVec3("lightColor", s->Color);
-        ourShader.setMat4("model", model);
-
+    if (baseSurface) {
+        Surface* s = baseSurface;
+        ourShader.setVec3("inColor", s->color);
+        ourShader.setBool("source", false);
+        ourShader.setMat4("model", glm::mat4(1.0f));
         glBindVertexArray(s->mesh.VAO);
         glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
     }
@@ -166,6 +174,36 @@ void Renderer::setupSphereVertexBuffer(Sphere& sphere) {
 
     sphere.mesh.indexCount = sphere.geometry.getIndexCount();
     sphere.remake = false; // mesh up-to-date
+}
+
+void Renderer::setupSurfaceVertexBuffer(Surface& surface) {
+    if (surface.mesh.VAO == 0) {
+        glGenBuffers(1, &surface.mesh.VBO);
+        glGenVertexArrays(1, &surface.mesh.VAO);
+        glGenBuffers(1, &surface.mesh.EBO);
+
+        glBindVertexArray(surface.mesh.VAO);
+
+        // Vertex positions only (3 floats) – normals derived in shader from position
+        glBindBuffer(GL_ARRAY_BUFFER, surface.mesh.VBO);
+        glBufferData(GL_ARRAY_BUFFER,
+                    surface.geometry.getVertexSize(),
+                    surface.geometry.getVertices(),
+                    GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface.mesh.EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    surface.geometry.getIndexSize(),
+                    surface.geometry.getIndices(),
+                    GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
+
+        glBindVertexArray(0);
+
+        surface.mesh.indexCount = surface.geometry.getIndexCount();
+    }
 }
 
 // Update window title with FPS (throttled)

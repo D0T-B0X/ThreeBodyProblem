@@ -19,7 +19,8 @@ add_executable(
     ${PROJECT_NAME} 
     ${CMAKE_SOURCE_DIR}/src/main.cpp 
     ${RENDERER_SRC_DIR}/renderer.cpp
-    ${RENDERER_SRC_DIR}/cubesphere.cpp
+    ${RENDERER_SRC_DIR}/Sphere3D.cpp
+    ${RENDERER_SRC_DIR}/Surface3D.cpp
     ${RENDERER_SRC_DIR}/shader.cpp 
     ${RENDERER_SRC_DIR}/camera.cpp
     ${CMAKE_SOURCE_DIR}/src/glad.c)

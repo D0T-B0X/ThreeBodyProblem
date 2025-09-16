@@ -1,5 +1,5 @@
-#ifndef CUBESPHERE_H
-#define CUBESPHERE_H
+#ifndef SPHERE_3D_H
+#define SPHERE_3D_H
 
 #include <vector>
 #include <cmath>
@@ -8,11 +8,11 @@
 #define POS  1.0f          // Positive face direction
 
 // Generates a sphere by subdividing and projecting cube faces
-class CubeSphere {
+class Sphere3D {
 public:
-    CubeSphere();                               // Constructs with default radius/subdivisions
-    CubeSphere(float radius);                   // Constructs with given radius
-    CubeSphere(float radius, unsigned int subs);// Constructs with given radius and subdivisions
+    Sphere3D();                               // Constructs with default radius/subdivisions
+    Sphere3D(float radius);                   // Constructs with given radius
+    Sphere3D(float radius, unsigned int subs);// Constructs with given radius and subdivisions
 
     void setRadius(float radius);               // Sets sphere radius and regenerates
     void setSubdivisions(unsigned int subs);    // Sets subdivision count and regenerates

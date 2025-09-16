@@ -15,6 +15,10 @@ uniform float specularStrength = 0.6;
 uniform float shininess = 32.0;
 
 void main() {
+    vec3 lc = lightColor;
+    if (all(equal(lc, vec3(0.0)))) {
+        lc = vec3(1.0);
+    }
 
     if (source) {
         FragColor = vec4(lightColor, 1.0);
@@ -31,8 +35,8 @@ void main() {
     float spec = pow(max(dot(R, V), 0.0), shininess);
 
     vec3 ambient = ambientStrength * inColor;
-    vec3 diffuse = diffuseStrength * diff * inColor * lightColor;
-    vec3 specular = specularStrength * spec * lightColor;
+    vec3 diffuse = diffuseStrength * diff * inColor * lc;
+    vec3 specular = specularStrength * spec * lc;
 
     FragColor = vec4(ambient + diffuse + specular, 1.0);
 }
