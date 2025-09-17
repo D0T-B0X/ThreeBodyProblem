@@ -1,6 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include <string>
 #include "Sphere3D.h"
 #include "Surface3D.h"
 
@@ -14,7 +15,7 @@ struct Mesh {
 
 // Sphere instance: owns CPU geometry + its GPU mesh + render properties
 struct Sphere {
-    Sphere3D   geometry;          // Procedural vertex/index data (CPU side)
+    Sphere3D     geometry;          // Procedural vertex/index data (CPU side)
     Mesh         mesh;              // Uploaded GPU buffers (lazy created)
     glm::vec3    Color{1.0f};       // Base albedo / emissive tint
     glm::vec3    Position{0.0f};    // World position (no rotation/scale here)
@@ -43,9 +44,9 @@ struct Sphere {
 };
 
 struct Surface {
-    Surface3D geometry;
-    Mesh mesh;
-    glm::vec3 color;
+    Surface3D   geometry;  // Procedural Vertex/Index Data
+    Mesh        mesh;      // Vertex Buffer data (VAO, VBO, EBO)
+    glm::vec3   color;     // Color of the Surface
 
     Surface() : geometry(-1.0f) { }
 

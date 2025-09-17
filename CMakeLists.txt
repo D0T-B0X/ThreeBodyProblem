@@ -9,6 +9,7 @@ set(VERTEX_PATH "${SHADERS_DIR}/vObj.glsl")
 set(FRAGMENT_PATH "${SHADERS_DIR}/fObj.glsl")
 set(RENDERER_DIR "${CMAKE_SOURCE_DIR}/include/Renderer")
 set(RENDERER_SRC_DIR "${CMAKE_SOURCE_DIR}/src/Renderer")
+set(PHYSICS_SRC_DIR "${CMAKE_SOURCE_DIR}/src/Physics")
 
 configure_file(
     ${CMAKE_SOURCE_DIR}/config.h.in
@@ -23,6 +24,7 @@ add_executable(
     ${RENDERER_SRC_DIR}/Surface3D.cpp
     ${RENDERER_SRC_DIR}/shader.cpp 
     ${RENDERER_SRC_DIR}/camera.cpp
+    ${PHYSICS_SRC_DIR}/physics.cpp
     ${CMAKE_SOURCE_DIR}/src/glad.c)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${GLFW_INCLUDE_DIRECTORIES})

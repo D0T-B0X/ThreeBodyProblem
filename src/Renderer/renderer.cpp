@@ -96,6 +96,10 @@ void Renderer::RenderFrame() {
     glfwPollEvents();
 }
 
+void Renderer::RenderFrame(Body*& bodies) {
+
+}
+
 GLFWwindow* Renderer::getWindow() {
     return window;
 }

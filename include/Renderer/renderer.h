@@ -9,7 +9,7 @@
 
 #include "shader.h"         // Shader wrapper (compile / link / uniform helpers)
 #include "camera.h"         // FPS style camera
-#include "mesh.h"
+#include "body.h"
 #include "settings.h"       // Global settings (screen size, FOV, etc.)
 #include "config.h"         // CMake‑generated (paths, if any)
 
@@ -31,6 +31,8 @@ public:
 
     // Render a single frame (poll events, render, swap buffers)
     void RenderFrame();
+
+    void RenderFrame(Body*& bodies);
 
     // public API to close the renderer without keyboard input.
     void closeRenderer();

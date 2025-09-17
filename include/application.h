@@ -2,6 +2,7 @@
 #define APPLICATION_H
 
 #include "Renderer/renderer.h"
+#include "Physics/physics.h"
 
 class App{
 public:
@@ -15,6 +16,7 @@ public:
 
         while(!renderer.shouldClose()) {
             renderer.RenderFrame();
+            pEngine.processFrame(bodies);
         }
 
         cleanup();
@@ -22,12 +24,14 @@ public:
 
 private:
     Renderer renderer;
+    Physics pEngine;
+
+    std::vector<Body> bodies;
 
     Sphere ball_one;
     Sphere ball_two;
     Sphere ball_three;
     Sphere light;
-    Surface base;
 
     void setupProgram() {
         ball_one.Name = "Ball One";
@@ -50,13 +54,10 @@ private:
         light.Color = {1.0f, 1.0f, 1.0f};
         light.setRadius(0.105f);
 
-        base.color = {1.0f, 0.5f, 0.5f};
-
-        renderer.drawSurface(base);
-        renderer.drawSphere(ball_one, {1.0f, 0.0f, 0.0f});
-        renderer.drawSphere(ball_two, {-0.5f, 0.0f, 0.8660254f});
-        renderer.drawSphere(ball_three, {-0.5f, 0.0f, -0.8660254f});
-        renderer.drawSphere(light, {3.0f, 3.0f, 2.0f});
+        renderer.drawSphere(ball_one, {0.0f, 2.0f, -2.0f});
+        renderer.drawSphere(ball_two, {1.7320508075f, -1.0f, -2.0f});
+        renderer.drawSphere(ball_three, {-1.7320508075f, -1.0f, -2.0f});
+        renderer.drawSphere(light, {0.0f, 0.0f, 4.0f});
     }
 
     void cleanup() {

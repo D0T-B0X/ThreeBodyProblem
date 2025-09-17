@@ -8,7 +8,7 @@
 
 // This constant defines the window's name
 // Change this to whatever you like.
-constexpr const char* APP_NAME = "Sphere";
+constexpr const char* APP_NAME = "Three Body Problem";
 
 // Camera settings
 constexpr float FOV = 45.0f;
