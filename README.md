@@ -1,114 +1,144 @@
 # ThreeBodyProblem
 
-Minimal OpenGL application to visualize and (incrementally) simulate an N / 3‑body gravitational system with a custom lightweight renderer and forthcoming basic physics engine (gravity, integration, collisions).
+OpenGL 4.3 playground for visualizing and (incrementally) simulating a 3 / N‑body gravitational system. Includes a lightweight renderer (GLFW + GLAD) plus a growing physics layer (gravity, collisions, integration).
 
 ## Overview
-The project provides:
-- A focused OpenGL 4.3 core profile renderer (GLFW + GLAD + modern shader pipeline).
-- Procedural sphere geometry (cube → sphere subdivision).
-- Camera with FPS navigation.
-- Simple light sphere (emissive) + shaded bodies.
-- Scaffold for adding physically based motion and interactions.
+Core goals:
+- Modern, minimal rendering path (no legacy fixed pipeline).
+- Procedural geometry (subdivided cube → sphere projection, simple quad surface).
+- Single light (emissive sphere) + basic Blinn/Phong shading.
+- Deterministic, decoupled physics loop (planned) with clear separation from rendering.
+- Educational clarity over engine feature breadth.
 
 ## Current Features
-- Real‑time rendering of multiple spheres.
-- Distinct light source sphere (emissive branch in shader).
-- Procedural mesh generation with lazy GPU upload.
-- Camera controls (mouse look, WASD + vertical movement).
-- Frame time / FPS display in window title.
-- Clean separation of rendering, geometry, and application setup.
+- Procedural spheres (configurable radius/subdivisions).
+- Emissive sphere treated as point light.
+- Movable FPS camera (W/A/S/D + Space/Ctrl + mouse look).
+- Basic surface (quad) generation (no vertex normals yet).
+- Title bar FPS display.
+- Physics scaffolding: Body struct + force accumulation placeholders + collision overlap test (sphere–sphere).
 
-## Upcoming Physics Engine (Planned)
-Planned iterative additions:
-1. Gravitational acceleration (Newtonian, pairwise).
-2. Numerical integration (Euler → Semi-Implicit → RK4 option).
-3. Basic elastic sphere–sphere collision response.
-4. Energy / momentum diagnostics.
-5. Adjustable gravitational constant, mass, timestep.
-6. Optional softening term to stabilize near-singular interactions.
-7. Pause / step / reset controls.
-8. Deterministic reproducibility (fixed timestep accumulator).
+## In Progress (Physics)
+- Per‑frame force accumulation (gravity not yet applied).
+- Sphere–sphere broadphase via radius overlap (areColliding).
+- Planned semi‑implicit Euler integration.
+- Planned energy / momentum diagnostics.
+
+## Planned Roadmap
+Near term:
+- [ ] Implement gravitational force accumulation (O(n^2)).
+- [ ] Fixed timestep accumulator (e.g., 1/120 s) + render interpolation.
+- [ ] Semi‑implicit Euler integration (then optional RK4).
+- [ ] Elastic collision response (sphere–sphere).
+- [ ] Softening factor to avoid singularities at very small r.
+- [ ] Proper normals for surface (currently derived per‑vertex from position only for spheres).
+- [ ] Multiple light sources (array uniforms / UBO).
+- [ ] Trajectory trail rendering (dynamic line buffer).
+- [ ] Parameter controls (G, masses, timestep) via simple UI or config.
+
+Longer term:
+- Spatial partition (uniform grid / BVH) for scalable broadphase.
+- Instanced rendering for large body counts.
+- Optional ImGui overlay (debug + runtime tuning).
+- Deterministic replay / state serialization.
 
 ## Project Structure
 ```
 include/
+  application.h
+  settings.h
+  body.h
   Renderer/
-    renderer.h        (render loop + resource management)
+    renderer.h
     camera.h
     shader.h
-    cubesphere.h
-  application.h       (App bootstrap)
+    mesh.h
+    Sphere3D.h
+    Surface3D.h
+  Physics/
+    physics.h
+shaders/
+  vObj.glsl
+  fObj.glsl
 src/
+  main.cpp
+  glad.c
   Renderer/
     renderer.cpp
     camera.cpp
     shader.cpp
-    cubesphere.cpp
-  glad.c
-  main.cpp
-shaders/
-  vObj.glsl
-  fObj.glsl
+    Sphere3D.cpp
+    Surface3D.cpp
+  Physics/
+    physics.cpp
 config.h.in → (CMake) → build/config.h
 CMakeLists.txt
+LICENSE
 ```
 
 ## Build (Linux)
-Dependencies: CMake ≥ 3.19, a C++17 compiler, pkg-config, glfw3, GL, dl.
-
-Commands:
+Dependencies (system packages example – Debian/Ubuntu):
+```
+sudo apt install build-essential cmake pkg-config libglfw3-dev libglm-dev
+```
+Then:
 ```
 mkdir -p build
 cd build
 cmake ..
-cmake --build .
+cmake --build -j
 ./ThreeBodyProblem
 ```
 
 ## Controls
 - Mouse: Look
-- W / A / S / D: Horizontal movement
+- W / A / S / D: Move
 - Space / Left Ctrl: Up / Down
 - ESC: Quit
 
-## Configuration
-Shader paths are injected via CMake into config.h:
-```
-#define VSHADER_PATH ".../shaders/vObj.glsl"
-#define FSHADER_PATH ".../shaders/fObj.glsl"
-```
-Adjust sphere properties (color, radius, initial placement) in application.h.
+## Shader Notes
+- Normals for spheres: reconstructed by normalizing object‑space position (acceptable because sphere center at transform origin).
+- Surface quad: currently also uses position‑derived normal → incorrect lighting; will be replaced with explicit normal attribute.
 
-## Physics Extension Plan
-New module (planned): physics/
-- Body struct: mass, position, velocity, force accumulator.
-- Integrator: step(dt).
-- Broad phase (simple O(n^2) first; later optional spatial partition).
-Renderer will read updated positions each frame.
+## Physics Design (Planned Loop)
+```
+accumulator += realDelta;
+while (accumulator >= fixedDt) {
+  accumulateForces(bodies);     // gravity, collisions (impulses)
+  integrate(bodies, fixedDt);   // semi-implicit Euler
+  accumulator -= fixedDt;
+}
+alpha = accumulator / fixedDt;
+render(interpolate(previous, current, alpha));
+```
+Bodies sync positions to Sphere.Position before rendering.
+
+## Known Limitations
+- No numerical integration yet (bodies static).
+- Collisions: only overlap test, no response.
+- Single point light; emissive sphere also rendered (no shadowing).
+- No gamma correction / HDR.
+- No normal / tangent attributes (simple shading only).
 
 ## Extending
-- Add a UI layer (e.g., ImGui) for runtime tweaking.
-- Implement trajectory trails (persisted line vertex buffer).
-- Add logging of conserved quantities (CSV export).
+- Add proper vertex normals to Surface3D (supply a second VBO attribute).
+- Introduce a Material struct (ambient/diffuse/specular, shininess).
+- Introduce multi-light support (struct Light { pos, color }) + uniform array.
+- Add command line args (e.g., ./ThreeBodyProblem --bodies 5 --dt 0.0083).
 
-## Roadmap (Short)
-- [ ] Mass assignment per sphere
-- [ ] Gravity accumulator
-- [ ] Stable fixed timestep loop
-- [ ] Collision detection / response
-- [ ] RK4 integrator option
-- [ ] Command-line overrides (timestep, G, bodies)
-- [ ] Trajectory visualization
-
-## Quality / Performance Notes
-- Current integrator: none (static placement). First addition will include fixed timestep logic decoupled from render delta.
-- Sphere geometry is static.
-- Collision handling initially naive (pairwise sphere intersection).
+## Troubleshooting
+- Blank window: verify GL 4.3 support (glxinfo | grep "OpenGL version").
+- Only one triangle for surface: ensure indices = {0,1,2, 0,2,3} and 4 unique vertices.
+- Lighting looks inverted: confirm model matrix (no negative scaling) and normal computation.
 
 ## License
-GNU General Public License v3.0
+GNU General Public License v3.0 (see LICENSE).
 
 ## Acknowledgements
-- GLFW (window + input)
+- GLFW (windowing/input)
 - GLAD (OpenGL loader)
-- GLM (math library)
+- GLM (math)
+- References: “Fix Your Timestep” (Gaff / Fiedler) for physics loop pattern.
+
+## Disclaimer
+Educational / experimental; APIs unstable while physics layer matures.
