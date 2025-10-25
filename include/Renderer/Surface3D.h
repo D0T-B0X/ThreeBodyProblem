@@ -21,20 +21,19 @@ public:
     Surface3D(float distance, float size);
     Surface3D(float distance, float size, surfaceOrientation orientation);
 
+    // Getter functions
     const unsigned int* getIndices();
     const float* getVertices();
     const int getVertexSize();
     const int getIndexSize();
     const int getIndexCount();
 
+    // Setter functions
     void setDistance(float distance);
     void setSize(float size);
-
-    // Grid/wireframe options (small, optional additions)
-    // When wireframe is true, generateVertices() will emit a wire grid
-    // controlled by GridRows / GridCols. Defaults are conservative.
     void setWireframe(bool wf);
     void setGridDensity(int rows, int cols);
+
     bool isWireframe() const;
 
 private:
