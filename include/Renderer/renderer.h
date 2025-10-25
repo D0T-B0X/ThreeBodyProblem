@@ -18,27 +18,27 @@ class Renderer {
 public:
     Renderer();
 
-    // Initialize context, load GL functions, compile shaders
-    void init();
-
     // check if the window should close (program end)
     bool shouldClose() const;
 
     // Register a sphere instance at a position (uploads mesh if needed)
-    void drawSphere(Sphere& sphere, glm::vec3 position);
+    void drawSphere(Body& body);
 
     void drawSurface(Surface& surface);
 
     // Render a single frame (poll events, render, swap buffers)
-    void RenderFrame();
-
-    void RenderFrame(Body*& bodies);
+    void RenderFrame(std::vector<Body>& bodies);
 
     // public API to close the renderer without keyboard input.
     void closeRenderer();
 
+    // Getter function
+
     // Access underlying GLFW window (e.g., for additional user logic)
     GLFWwindow* getWindow();
+
+    // Access the time between two consecutive frames
+    double getFrameTime();
 
     // Release GL + GLFW resources
     void cleanup();

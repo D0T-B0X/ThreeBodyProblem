@@ -17,6 +17,7 @@ Surface3D::Surface3D(float distance, float size, surfaceOrientation orientation)
     generateVertices();
 }
 
+// Getter functions
 const unsigned int* Surface3D::getIndices() {
     return Indices.data();
 }
@@ -37,6 +38,7 @@ const int Surface3D::getIndexCount() {
     return Indices.size();
 }
 
+// Setter functions
 void Surface3D::setWireframe(bool wf) {
     Wireframe = wf;
     generateVertices();
@@ -45,6 +47,16 @@ void Surface3D::setWireframe(bool wf) {
 void Surface3D::setGridDensity(int rows, int cols) {
     GridRows = rows; 
     GridCols = cols; 
+    generateVertices();
+}
+
+void Surface3D::setDistance(float distance) {
+    Distance = distance;
+    generateVertices();
+}
+
+void Surface3D::setSize(float size) {
+    Size = size;
     generateVertices();
 }
 
@@ -159,14 +171,4 @@ void Surface3D::generateVertices() {
             }
         }
     }
-}
-
-void Surface3D::setDistance(float distance) {
-    Distance = distance;
-    generateVertices();
-}
-
-void Surface3D::setSize(float size) {
-    Size = size;
-    generateVertices();
 }

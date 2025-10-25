@@ -5,7 +5,7 @@
 #include "Sphere3D.h"
 #include "Surface3D.h"
 
-// Simple GPU mesh container (one VAO/VBO/EBO + index count)
+// Simple GPU mesh container
 struct Mesh {
     unsigned int VBO = 0;
     unsigned int VAO = 0;
@@ -26,7 +26,7 @@ struct Sphere {
     std::string  Name;              // Debug name
 
     // Default: unit radius sphere
-    Sphere() : geometry(1.0f) {}
+    Sphere() {}
 
     Sphere(std::string& name, float radius, glm::vec3 color)
         : geometry(radius), Name(name), Color(color) {}

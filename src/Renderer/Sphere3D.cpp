@@ -1,7 +1,7 @@
 #include "Renderer/Sphere3D.h"
 
 // Default constructor: creates sphere with radius 1 and 16 subdivisions
-Sphere3D::Sphere3D() : Radius(1.0f), Subdivisions(16) {
+Sphere3D::Sphere3D() : Radius(-1.0f), Subdivisions(16) {
     generateSphere();
 }
 
@@ -15,6 +15,8 @@ Sphere3D::Sphere3D(float radius, unsigned int subs) : Radius(radius), Subdivisio
     generateSphere();
 }
 
+// Setter functions
+
 // Set sphere radius and rebuild geometry
 void Sphere3D::setRadius(float radius) {
     Radius = radius;
@@ -26,6 +28,8 @@ void Sphere3D::setSubdivisions(unsigned int subs) {
     Subdivisions = subs;
     generateSphere();
 }
+
+// Getter functions
 
 // Return pointer to vertex buffer (positions)
 const float* Sphere3D::getVertexData() const {
@@ -186,6 +190,8 @@ void Sphere3D::normalizeVectors(const float v[3], float n[3]) {
 
 // Regenerate all sphere data (vertices + indices)
 void Sphere3D::generateSphere() {
+    if (Radius < 0) return; // Do not generate the sphere until a proper radius is given by the user
+
     clearArrays();
 
     if (Subdivisions < 1) {

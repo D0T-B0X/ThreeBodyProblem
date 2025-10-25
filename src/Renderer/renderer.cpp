@@ -4,9 +4,8 @@
 Renderer::Renderer() 
     : camera(glm::vec3(0.0f, 0.0f, 3.0f)),
       window(nullptr),
-      deltaTime(0.0f) { }
-
-void Renderer::init() {
+      deltaTime(0.0f) {
+    
     // Init GLFW + context + GLAD, then basic GL state
     initGlfwWindow();
     createGlfwWindow(SCR_WIDTH, SCR_HEIGHT, APP_NAME);
@@ -27,11 +26,17 @@ void Renderer::closeRenderer() {
 }
 
 // Register a sphere for rendering (lazy mesh upload / reuse)
-void Renderer::drawSphere(Sphere& sphere, glm::vec3 position) {
-    sphere.Position = position;
-    setupSphereVertexBuffer(sphere);       // uploads only if VAO==0 or mesh.remake==true
-    spheres.push_back(&sphere);
-    if (sphere.mesh.source) lightSphere = &sphere; // remember light source sphere
+void Renderer::drawSphere(Body& body) {
+    // Only generate the vertices when the user calls the draw 
+    // function preventing double calculation of vertices.
+    if (body.sphere.geometry.getRadius() < 0) {
+        body.sphere.geometry.setRadius(1.0f);
+    }
+
+    body.sphere.Position = body.Position;
+    setupSphereVertexBuffer(body.sphere);       // uploads only if VAO==0 or mesh.remake==true
+    spheres.push_back(&(body.sphere));
+    if (body.sphere.mesh.source) lightSphere = &(body.sphere); // remember light source sphere
 }
 
 void Renderer::drawSurface(Surface& surface) {
@@ -40,7 +45,8 @@ void Renderer::drawSurface(Surface& surface) {
 }
  
 // Main render loop
-void Renderer::RenderFrame() {
+void Renderer::RenderFrame(std::vector<Body>& bodies) {
+
     // Frame timing
     float currentFrame = (float)glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -73,14 +79,14 @@ void Renderer::RenderFrame() {
     }
 
     // Draw all spheres
-    for(Sphere* s : spheres) {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
-        ourShader.setBool("source", s->mesh.source);
-        ourShader.setBool("inactive", s->mesh.inactive);
-        ourShader.setVec3("inColor", s->Color);
+    for(Body body : bodies) {
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), body.Position);
+        ourShader.setBool("source", body.sphere.mesh.source);
+        ourShader.setBool("inactive", body.sphere.mesh.inactive);
+        ourShader.setVec3("inColor", body.sphere.Color);
         ourShader.setMat4("model", model);
-        glBindVertexArray(s->mesh.VAO);
-        glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(body.sphere.mesh.VAO);
+        glDrawElements(GL_TRIANGLES, body.sphere.mesh.indexCount, GL_UNSIGNED_INT, 0);
     }
 
     if (baseSurface) {
@@ -103,12 +109,12 @@ void Renderer::RenderFrame() {
     glfwPollEvents();
 }
 
-void Renderer::RenderFrame(Body*& bodies) {
-
-}
-
 GLFWwindow* Renderer::getWindow() {
     return window;
+}
+
+double Renderer::getFrameTime() {
+    return deltaTime;
 }
 
 // Initialize GLFW and request core profile context
