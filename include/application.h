@@ -56,10 +56,10 @@ private:
         light.Color = {1.0f, 1.0f, 1.0f};
         light.setRadius(0.105f);
 
-        surface.color = glm::vec3(0.5f, 0.5f, 0.7f);
+        surface.color = glm::vec3(0.5f, 0.5f, 0.5f);
         surface.setSize(40.0f);
         surface.setWireframe(true);          // Enable wireframe grid
-        surface.setGridDensity(12, 12);      // Optional: control grid density
+        surface.setGridDensity(12, 12);      // Control grid density
         surface.mesh.inactive = true;
         surface.setDistance(-2.0f);
 

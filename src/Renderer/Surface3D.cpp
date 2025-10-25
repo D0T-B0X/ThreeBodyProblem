@@ -58,7 +58,7 @@ void Surface3D::generateVertices() {
     Indices.clear();
 
     if (!Wireframe) {
-        // Existing behavior: single quad composed of 2 triangles
+        // Single quad composed of 2 triangles
         Vertices.reserve(4 * 3);
         Indices.reserve(6);
 
@@ -137,7 +137,6 @@ void Surface3D::generateVertices() {
             }
         }
 
-        // Build line indices: horizontal then vertical segments
         Indices.reserve((vertRows * (vertCols - 1) + vertCols * (vertRows - 1)) * 2);
 
         // horizontal lines
