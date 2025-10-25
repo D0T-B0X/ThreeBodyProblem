@@ -77,16 +77,16 @@ LICENSE
 ```
 
 ## Build (Linux)
-Dependencies (system packages example – Debian/Ubuntu):
+Dependencies:
 ```
 sudo apt install build-essential cmake pkg-config libglfw3-dev libglm-dev
 ```
 Then:
 ```
 mkdir -p build
-cd build
-cmake ..
-cmake --build -j
+cmake -S . -B build
+cd build/
+make -j $(nproc)
 ./ThreeBodyProblem
 ```
 
