@@ -29,16 +29,16 @@ void Renderer::closeRenderer() {
 // Register a sphere for rendering (lazy mesh upload / reuse)
 void Renderer::drawSphere(Sphere& sphere, glm::vec3 position) {
     sphere.Position = position;
-    setupSphereVertexBuffer(sphere);       // uploads only if VAO==0 or remake==true
+    setupSphereVertexBuffer(sphere);       // uploads only if VAO==0 or mesh.remake==true
     spheres.push_back(&sphere);
-    if (sphere.source) lightSphere = &sphere; // remember light source sphere
+    if (sphere.mesh.source) lightSphere = &sphere; // remember light source sphere
 }
 
 void Renderer::drawSurface(Surface& surface) {
     baseSurface = &surface;
     setupSurfaceVertexBuffer(surface);
 }
-
+ 
 // Main render loop
 void Renderer::RenderFrame() {
     // Frame timing
@@ -57,7 +57,7 @@ void Renderer::RenderFrame() {
     ourShader.use();
     generateCameraView();
 
-    // Provide light + view uniforms (light position may change below for animated light)
+    // Provide light + view uniforms 
     glm::vec3 lightPos = lightSphere ? lightSphere->Position : glm::vec3(5.0f, 5.0f, 5.0f);
     ourShader.setVec3("lightPos", lightPos);
     ourShader.setVec3("viewPos", camera.Position);
@@ -75,7 +75,8 @@ void Renderer::RenderFrame() {
     // Draw all spheres
     for(Sphere* s : spheres) {
         glm::mat4 model = glm::translate(glm::mat4(1.0f), s->Position);
-        ourShader.setBool("source", s->source);
+        ourShader.setBool("source", s->mesh.source);
+        ourShader.setBool("inactive", s->mesh.inactive);
         ourShader.setVec3("inColor", s->Color);
         ourShader.setMat4("model", model);
         glBindVertexArray(s->mesh.VAO);
@@ -86,9 +87,15 @@ void Renderer::RenderFrame() {
         Surface* s = baseSurface;
         ourShader.setVec3("inColor", s->color);
         ourShader.setBool("source", false);
+        ourShader.setBool("inactive", s->mesh.inactive);
         ourShader.setMat4("model", glm::mat4(1.0f));
         glBindVertexArray(s->mesh.VAO);
-        glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+        if (s->mesh.isWireframe) {
+            // draw as lines (each index pair is a segment)
+            glDrawElements(GL_LINES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+        } else {
+            glDrawElements(GL_TRIANGLES, s->mesh.indexCount, GL_UNSIGNED_INT, 0);
+        }
     }
 
     glBindVertexArray(0);
@@ -148,7 +155,7 @@ void Renderer::generateCameraView() {
 // Create / update sphere mesh buffers (only when first created or remake flag true)
 void Renderer::setupSphereVertexBuffer(Sphere& sphere) {
 
-    if (sphere.mesh.VAO != 0 && !sphere.remake) return; // already uploaded and valid
+    if (sphere.mesh.VAO != 0 && !sphere.mesh.remake) return; // already uploaded and valid
 
     if (sphere.mesh.VAO == 0) {
         glGenBuffers(1, &sphere.mesh.VBO);
@@ -177,37 +184,43 @@ void Renderer::setupSphereVertexBuffer(Sphere& sphere) {
     glBindVertexArray(0);
 
     sphere.mesh.indexCount = sphere.geometry.getIndexCount();
-    sphere.remake = false; // mesh up-to-date
+    sphere.mesh.remake = false; // mesh up-to-date
 }
 
 void Renderer::setupSurfaceVertexBuffer(Surface& surface) {
+    if (surface.mesh.VAO != 0 && !surface.mesh.remake) return;
+
     if (surface.mesh.VAO == 0) {
         glGenBuffers(1, &surface.mesh.VBO);
         glGenVertexArrays(1, &surface.mesh.VAO);
         glGenBuffers(1, &surface.mesh.EBO);
-
-        glBindVertexArray(surface.mesh.VAO);
-
-        // Vertex positions only (3 floats) – normals derived in shader from position
-        glBindBuffer(GL_ARRAY_BUFFER, surface.mesh.VBO);
-        glBufferData(GL_ARRAY_BUFFER,
-                    surface.geometry.getVertexSize(),
-                    surface.geometry.getVertices(),
-                    GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface.mesh.EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    surface.geometry.getIndexSize(),
-                    surface.geometry.getIndices(),
-                    GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
-
-        glBindVertexArray(0);
-
-        surface.mesh.indexCount = surface.geometry.getIndexCount();
     }
+
+    // propagate wireframe flag from CPU geometry to GPU mesh metadata
+    surface.mesh.isWireframe = surface.geometry.isWireframe();
+
+    glBindVertexArray(surface.mesh.VAO);
+
+    // Vertex positions only (3 floats) – normals derived in shader from position
+    glBindBuffer(GL_ARRAY_BUFFER, surface.mesh.VBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                surface.geometry.getVertexSize(),
+                surface.geometry.getVertices(),
+                GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface.mesh.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                surface.geometry.getIndexSize(),
+                surface.geometry.getIndices(),
+                GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    surface.mesh.indexCount = surface.geometry.getIndexCount();
+    surface.mesh.remake = false;
 }
 
 // Update window title with FPS (throttled)
@@ -252,6 +265,13 @@ void Renderer::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 // Process raw mouse delta for camera
 void Renderer::handleMouse(double xpos, double ypos) {
+    if (firstMouse) {
+        lastX = static_cast<float>(xpos);
+        lastY = static_cast<float>(ypos);
+        firstMouse = false;
+        return;
+    }
+
     float xoffset = static_cast<float>(xpos) - lastX;
     float yoffset = lastY - static_cast<float>(ypos);
     lastX = static_cast<float>(xpos);
@@ -262,7 +282,7 @@ void Renderer::handleMouse(double xpos, double ypos) {
 // Keyboard input mapping to camera movement
 void Renderer::processKeyboardInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+        closeRenderer();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.processKeyboard(cameraMovement::FORWARD, deltaTime);

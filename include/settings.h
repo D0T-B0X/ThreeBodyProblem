@@ -11,6 +11,6 @@
 constexpr const char* APP_NAME = "Three Body Problem";
 
 // Camera settings
-constexpr float FOV = 45.0f;
+constexpr float FOV = 90.0f;
 
 #endif

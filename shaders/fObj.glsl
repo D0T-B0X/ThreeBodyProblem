@@ -4,6 +4,7 @@ in vec3 vNormal;
 out vec4 FragColor;
 
 uniform bool source;
+uniform bool inactive;
 uniform vec3 inColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
@@ -20,8 +21,8 @@ void main() {
         lc = vec3(1.0);
     }
 
-    if (source) {
-        FragColor = vec4(lightColor, 1.0);
+    if (inactive || source) {
+        FragColor = vec4(inColor, 1.0);
         return;
     }
 

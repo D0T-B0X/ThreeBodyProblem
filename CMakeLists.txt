@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(ThreeBodyProblem)
 
 find_package(PkgConfig REQUIRED)
+find_package(glfw3 REQUIRED)
 pkg_check_modules(GLFW REQUIRED glfw3)
 
 set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/shaders")
@@ -25,7 +26,8 @@ add_executable(
     ${RENDERER_SRC_DIR}/shader.cpp 
     ${RENDERER_SRC_DIR}/camera.cpp
     ${PHYSICS_SRC_DIR}/physics.cpp
-    ${CMAKE_SOURCE_DIR}/src/glad.c)
+    ${CMAKE_SOURCE_DIR}/src/glad.c
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${GLFW_INCLUDE_DIRECTORIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)

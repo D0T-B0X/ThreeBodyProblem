@@ -6,6 +6,7 @@
 #include <glm/gtc/epsilon.hpp>
 #include "body.h"
 
+inline constexpr float dt = 0.016f;
 inline constexpr double GRAV_CONST = 6.67430e-11;
 inline constexpr float EPSILON = 1e-6f;
 
@@ -16,6 +17,7 @@ public:
     void init();
     void push(Body& sphere, glm::vec3 force);
     void processFrame(std::vector<Body>& bodies);
+    void cleanup();
 
 private:
     float Mass;

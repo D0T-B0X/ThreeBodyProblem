@@ -7,15 +7,16 @@
 class App{
 public:
     App() {
-        renderer.init();
+        rEngine.init();
+        pEngine.init();
     }
 
     void run() {
-
+ 
         setupProgram();
 
-        while(!renderer.shouldClose()) {
-            renderer.RenderFrame();
+        while(!rEngine.shouldClose()) {
+            rEngine.RenderFrame();
             pEngine.processFrame(bodies);
         }
 
@@ -23,7 +24,7 @@ public:
     }
 
 private:
-    Renderer renderer;
+    Renderer rEngine;
     Physics pEngine;
 
     std::vector<Body> bodies;
@@ -32,36 +33,46 @@ private:
     Sphere ball_two;
     Sphere ball_three;
     Sphere light;
+    Surface surface;
 
     void setupProgram() {
         ball_one.Name = "Ball One";
-        ball_one.source = false;
+        ball_one.mesh.source = false;
         ball_one.Color = {1.0f, 0.0f, 0.0f};
         ball_one.setRadius(0.3f);
 
         ball_two.Name = "Ball Two";
-        ball_two.source = false;
+        ball_two.mesh.source = false;
         ball_two.Color = {0.0f, 1.0f, 0.0f};
         ball_two.setRadius(0.3f);
 
         ball_three.Name = "Ball Three";
-        ball_three.source = false;
+        ball_three.mesh.source = false;
         ball_three.Color = {0.0f, 0.0f, 1.0f};
         ball_three.setRadius(0.3f);
 
         light.Name = "Light";
-        light.source = true;
+        light.mesh.source = true;
         light.Color = {1.0f, 1.0f, 1.0f};
         light.setRadius(0.105f);
 
-        renderer.drawSphere(ball_one, {0.0f, 2.0f, -2.0f});
-        renderer.drawSphere(ball_two, {1.7320508075f, -1.0f, -2.0f});
-        renderer.drawSphere(ball_three, {-1.7320508075f, -1.0f, -2.0f});
-        renderer.drawSphere(light, {0.0f, 0.0f, 4.0f});
+        surface.color = glm::vec3(0.5f, 0.5f, 0.7f);
+        surface.setSize(40.0f);
+        surface.setWireframe(true);          // Enable wireframe grid
+        surface.setGridDensity(12, 12);      // Optional: control grid density
+        surface.mesh.inactive = true;
+        surface.setDistance(-2.0f);
+
+        rEngine.drawSphere(ball_one, {0.0f, 2.0f, -2.0f});
+        rEngine.drawSphere(ball_two, {1.7320508075f, -1.0f, -2.0f});
+        rEngine.drawSphere(ball_three, {-1.7320508075f, -1.0f, -2.0f});
+        rEngine.drawSphere(light, {0.0f, 0.0f, 4.0f});
+        rEngine.drawSurface(surface);
     }
 
     void cleanup() {
-        renderer.cleanup();
+        rEngine.cleanup();
+        pEngine.cleanup();
     }
 };
 

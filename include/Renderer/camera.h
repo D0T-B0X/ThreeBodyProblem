@@ -19,7 +19,7 @@ const float YAW = -90.0f;
 // Default pitch angle
 const float PITCH = 0.0f;
 // Default movement speed
-const float SPEED = 2.5f;
+const float SPEED = 5.0f;
 // Default mouse sensitivity
 const float SENSITIVITY = 0.1f;
 

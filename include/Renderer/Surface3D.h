@@ -27,6 +27,16 @@ public:
     const int getIndexSize();
     const int getIndexCount();
 
+    void setDistance(float distance);
+    void setSize(float size);
+
+    // Grid/wireframe options (small, optional additions)
+    // When wireframe is true, generateVertices() will emit a wire grid
+    // controlled by GridRows / GridCols. Defaults are conservative.
+    void setWireframe(bool wf);
+    void setGridDensity(int rows, int cols);
+    bool isWireframe() const;
+
 private:
     float Size = 5.0f;
     float Distance = -2.0f;
@@ -35,7 +45,12 @@ private:
     std::vector<unsigned int> Indices;
     std::vector<float> Vertices;
 
-    void generateVertices(surfaceOrientation orientation, float distance, float size);
+    // If true, generate a line-grid (wireframe). GridRows/GridCols control density.
+    bool Wireframe = false;
+    int GridRows = 8;
+    int GridCols = 8;
+
+    void generateVertices();
 };
 
 #endif
