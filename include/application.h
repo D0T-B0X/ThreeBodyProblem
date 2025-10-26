@@ -54,7 +54,7 @@ private:
         ball_one.Position = glm::vec3(0.0f, 2.0f, -2.0f);    // Set the ball position
         ball_one.Mass = 1.0f;                                // Set the ball's mass
         ball_one.Velocity = glm::vec3(1.0f, 0.0f, 0.0f);     // Set the ball's initial velocity
-        ball_one.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); // Set the ball's initial accelaration
+        ball_one.Acceleration = glm::vec3(0.5f, 0.0f, 0.0f); // Set the ball's initial accelaration
         ball_one.Force = glm::vec3(0.0f, 0.0f, 0.0f);        // Set the initial force acting on the body
         bodies.push_back(ball_one);                          // Add ball to the bodies list
 

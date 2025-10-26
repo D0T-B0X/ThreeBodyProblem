@@ -12,14 +12,20 @@ void Physics::processFrame(std::vector<Body>& bodies) {
 
     for (auto& body : bodies) {
 
+        // Euler integration to update velocity vector
+        body.Velocity += body.Acceleration * dt;
+
         // Euler integration to update position vector
         body.Position += body.Velocity * dt * Speed;
         
-        // Natural exponential velocity decay: v(t) = v₀ * e^(-λt)
-        // λ (lambda) controls decay rate: higher = faster decay
-        float lambda = 0.4f;  // Adjust this for desired decay speed (0.1 = slow, 1.0 = fast)
-        float decayFactor = glm::exp(-lambda * dt);
-        body.Velocity *= decayFactor;
+        /**
+         Uncomment to enable veclocity decay
+         *  // Natural exponential velocity decay: v(t) = v₀ * e^(-λt)
+         *  // λ (lambda) controls decay rate: higher = faster decay
+         *  float lambda = 0.4f;  // Adjust this for desired decay speed (0.1 = slow, 1.0 = fast)
+         *  float decayFactor = glm::exp(-lambda * dt);
+         *  body.Velocity *= decayFactor;
+         */
 
         // End simulation if particle crosses the boundary
         if (body.Position.x >= 20.0f) {
