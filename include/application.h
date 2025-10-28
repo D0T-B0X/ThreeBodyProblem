@@ -1,3 +1,36 @@
+/**
+ * @file application.h
+ * @author DotBox
+ * @brief Main application orchestrator for the three-body gravitational simulator
+ * 
+ * This is the core control module that coordinates the rendering and physics subsystems.
+ * It implements the main game loop using a fixed timestep accumulator pattern to ensure
+ * deterministic physics simulation decoupled from variable frame rates.
+ * 
+ * Architecture:
+ * - Renderer (rEngine): Handles all OpenGL rendering, camera, and visual output
+ * - Physics (pEngine): Manages numerical integration, forces, and collision detection
+ * - Bodies: Vector of physical objects that exist in both render and physics contexts
+ * 
+ * The loop structure follows the "Fix Your Timestep" pattern:
+ * 1. Accumulate real frame time
+ * 2. Process physics in fixed dt chunks while accumulator >= dt
+ * 3. Sync physics state to render state
+ * 4. Render single frame with current state
+ * 
+ * This ensures physics calculations happen at a constant rate (e.g., 60 Hz) regardless
+ * of rendering performance, maintaining consistent behavior across different hardware.
+ * 
+ * Initial scene setup:
+ * - Three colored spheres (red, green, blue) arranged in equilateral triangle
+ * - One emissive white sphere acting as point light source
+ * - Wireframe grid surface for spatial reference
+ * 
+ * @version 0.1
+ * @date 2025-10-28
+ * 
+ */
+
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
@@ -8,20 +41,44 @@ class App{
 public:
     App() : accumulator(0.0f) { }
 
+    /**
+     * @brief Main application loop - orchestrates rendering and physics
+     * 
+     * Implements fixed timestep game loop pattern:
+     * 1. Setup: Initialize scene objects (spheres, surface, lighting)
+     * 2. Loop: While neither renderer nor physics requests termination:
+     *    a. Measure frame time (variable based on render performance)
+     *    b. Accumulate time into physics accumulator
+     *    c. Apply impulses or forces at specific frame counts (testing/demo)
+     *    d. Process physics in fixed dt increments (deterministic updates)
+     *    e. Render current frame state (interpolation could be added here)
+     * 3. Cleanup: Release resources for both subsystems
+     * 
+     * The fixed timestep ensures physics behaves identically regardless of
+     * frame rate variations. For example, at 60 FPS physics and 120 FPS render,
+     * physics runs once per 2 render frames. At 30 FPS render, physics runs
+     * twice per render frame to maintain temporal accuracy.
+     */
     void run() {
  
         setupProgram();
 
-        while(!rEngine.shouldClose() && !pEngine.shouldClose()) {
-            frameCount++;
-
+        while(!rEngine.shouldClose()) {
             // Time taken between two consecutive frames
             double frameTime = rEngine.getFrameTime();
             accumulator += frameTime;
 
-            // If accumulated time is more than the fixed
-            // physics engine time step then run the physics engine
+            // Demo: Apply impulse to red ball after 2 seconds (at 60Hz physics)
+            if (timeCount == 240) {
+                pEngine.push(ball_one, glm::vec3(2.0f, 1.0f, -1.0f));
+                pEngine.push(ball_two, glm::vec3(-1.0f, 0.0f, 0.0f));
+                pEngine.push(ball_three, glm::vec3(1.0f, 0.0f, 0.0f));
+            }
+
+            // Fixed timestep physics loop: process physics at constant rate
+            // regardless of rendering frame rate (ensures determinism)
             while (accumulator >= dt) {
+                timeCount++;
                 pEngine.processFrame(bodies);
                 accumulator -= dt;
             }            
@@ -32,79 +89,87 @@ public:
     }
 
 private:
-    Renderer rEngine;
-    Physics pEngine;
+    // Core subsystems
+    Renderer rEngine;            ///< OpenGL rendering engine (camera, shaders, draw calls)
+    Physics pEngine = Physics(); ///< Physics engine (integration, forces, collisions)
 
-    std::vector<Body> bodies;
-
-    float accumulator;
-    Body ball_one;
-    Body ball_two;
-    Body ball_three;
-    Body light;
-    Surface surface;
+    // Scene objects
+    std::vector<Body*> bodies;    ///< All physical bodies in the simulation (rendered + physics)
+ 
+    // Timing and state
+    float accumulator;           ///< Accumulated real time for fixed timestep processing
+    unsigned int timeCount;      ///< Number of physics timesteps executed (frame counter)
+    
+    // Individual body instances (initialized in setupProgram)
+    // The user may create more or less depending on their need.
+    Body ball_one;               ///< Red sphere (primary test subject for impulses)
+    Body ball_two;               ///< Green sphere (positioned at equilateral triangle vertex)
+    Body ball_three;             ///< Blue sphere (positioned at equilateral triangle vertex)
+    Body light;                  ///< White emissive sphere (acts as point light source)
+    Surface surface;             ///< Ground plane with wireframe grid visualization
 
     void setupProgram() {
         
-        // Red ball
-        ball_one.sphere.Name = "Ball One";                   // Set sphere debug name
-        ball_one.sphere.mesh.source = false;                 // Set sphere emission status
-        ball_one.sphere.Color = {1.0f, 0.0f, 0.0f};          // Set sphere color
-        ball_one.setRadius(0.5f);                            // Set sphere size
-        ball_one.Position = glm::vec3(0.0f, 2.0f, -2.0f);    // Set the ball position
-        ball_one.Mass = 1.0f;                                // Set the ball's mass
-        ball_one.Velocity = glm::vec3(1.0f, 0.0f, 0.0f);     // Set the ball's initial velocity
-        ball_one.Acceleration = glm::vec3(0.5f, 0.0f, 0.0f); // Set the ball's initial accelaration
-        ball_one.Force = glm::vec3(0.0f, 0.0f, 0.0f);        // Set the initial force acting on the body
-        bodies.push_back(ball_one);                          // Add ball to the bodies list
+        // === Red Ball Configuration ===
+        ball_one.sphere.Name = "Ball One";                   // Debug identifier for logging/errors
+        ball_one.sphere.mesh.source = false;                 // Not a light source (receives lighting)
+        ball_one.sphere.Color = {1.0f, 0.0f, 0.0f};          // Pure red diffuse color
+        ball_one.setRadius(0.5f);                            // 0.5 unit radius sphere
+        ball_one.Position = glm::vec3(0.0f, 2.0f, -2.0f);    // Top vertex, elevated 2 units
+        ball_one.Mass = 1.0f;                                // 1 kg mass (arbitrary unit)
+        ball_one.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     // Initially at rest
+        ball_one.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); // No forces applied yet
+        ball_one.Force = glm::vec3(0.0f, 0.0f, 0.0f);        // Force accumulator starts at zero
+        bodies.push_back(&ball_one);                          // Register with simulation
 
-        // Green ball
+        // === Green Ball Configuration ===
         ball_two.sphere.Name = "Ball Two";
         ball_two.sphere.mesh.source = false;
-        ball_two.sphere.Color = {0.0f, 1.0f, 0.0f};
+        ball_two.sphere.Color = {0.0f, 1.0f, 0.0f};          // Pure green diffuse color
         ball_two.setRadius(0.5f);
-        ball_two.Position = glm::vec3(1.7320508075f, -1.0f, -2.0f);
+        ball_two.Position = glm::vec3(1.7320508075f, -1.0f, -2.0f); // Right vertex (√3 ≈ 1.732)
         ball_two.Mass = 1.0f;                               
-        ball_two.Velocity = glm::vec3(-1.0f, 0.0f, 0.0f);     
+        ball_two.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     
         ball_two.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
         ball_two.Force = glm::vec3(0.0f, 0.0f, 0.0f);      
-        bodies.push_back(ball_two);
+        bodies.push_back(&ball_two);
 
-        // Blue ball
+        // === Blue Ball Configuration ===
         ball_three.sphere.Name = "Ball Three";
         ball_three.sphere.mesh.source = false;
-        ball_three.sphere.Color = {0.0f, 0.0f, 1.0f};
+        ball_three.sphere.Color = {0.0f, 0.0f, 1.0f};        // Pure blue diffuse color
         ball_three.setRadius(0.5f);
-        ball_three.Position = glm::vec3(-1.7320508075f, -1.0f, -2.0f);
+        ball_three.Position = glm::vec3(-1.7320508075f, -1.0f, -2.0f); // Left vertex (-√3)
         ball_three.Mass = 1.0f;                                
-        ball_three.Velocity = glm::vec3(1.0f, 0.0f, 0.0f);     
+        ball_three.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     
         ball_three.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
         ball_three.Force = glm::vec3(0.0f, 0.0f, 0.0f);        
-        bodies.push_back(ball_three);
+        bodies.push_back(&ball_three);
 
-        // Light source sphere
+        // === Light Source Configuration ===
         light.sphere.Name = "Light";
-        light.sphere.mesh.source = true;
-        light.sphere.Color = {1.0f, 1.0f, 1.0f};
-        light.setRadius(1.0f);
-        light.Position = glm::vec3(0.0f, 0.0f, 4.0f);
+        light.sphere.mesh.source = true;                     // Emissive: doesn't receive lighting, emits light
+        light.sphere.Color = {1.0f, 1.0f, 1.0f};             // White light (neutral color temperature)
+        light.setRadius(1.0f);                               // Larger radius for visibility
+        light.Position = glm::vec3(0.0f, 0.0f, 4.0f);        // Behind camera/above scene
         light.Mass = 1.0f;                                
-        light.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);    
+        light.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);        // Stationary light source
         light.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
         light.Force = glm::vec3(0.0f, 0.0f, 0.0f);       
-        bodies.push_back(light);
+        bodies.push_back(&light);
 
-        // Draw all the generated spheres
-        for (Body &body : bodies) {
-            rEngine.drawSphere(body);
+        // Register all spheres with renderer for drawing
+        for (Body* body : bodies) {
+            rEngine.drawSphere(*body);
         }
 
-        surface.color = glm::vec3(0.5f, 0.5f, 0.5f); // Surface color
-        surface.setSize(40.0f);                      // Surface size (height and width)
-        surface.setWireframe(true);                  // Enable wireframe grid
-        surface.setGridDensity(10, 10);              // Control grid density
-        surface.mesh.inactive = true;                // Surface will not be affected by lighting
-        surface.setDistance(-2.0f);                  // Distance of surface from origin (y-axis)
+        // === Ground Surface Configuration ===
+        surface.color = glm::vec3(0.5f, 0.5f, 0.5f);     // Medium gray for neutral reference
+        surface.setSize(40.0f);                          // 40×40 unit plane (width × height)
+        surface.setWireframe(true);                      // Render as grid lines (not filled quads)
+        surface.setGridDensity(10, 10);                  // 10×10 grid (11 lines each direction)
+        surface.mesh.inactive = true;                    // Unlit surface (no Blinn-Phong shading)
+        surface.setDistance(-2.0f);                      // Plane at y = -2 (below spheres)
 
         rEngine.drawSurface(surface);
     }

@@ -1,34 +1,54 @@
 #include "Physics/physics.h"
 
-Physics::Physics() {
-
-    // TODO => Implement an init function.
-    endSim = false;
-    Speed = 3.0f;
-
+Physics::Physics() : Speed(3.0f), endSim(false) {
+    dt = 1.0 / 60.0;
 }
 
-void Physics::processFrame(std::vector<Body>& bodies) {
+Physics::Physics(float speed) : Speed(speed), endSim(false) {
+    dt = 1.0 / 60.0;
+}
 
-    for (auto& body : bodies) {
+Physics::Physics(float timeStep, float speed) : Speed(speed), endSim(false) {
+    dt = timeStep;
+}
+
+void Physics::processFrame(std::vector<Body*> bodies) {
+
+    for (int i = 0; i < bodies.size(); ++i) {
+
+        Body* body = bodies[i];
+
+        for (int j = i + 1; j < bodies.size(); ++j) {
+            Body* colBody = bodies[j];
+            if (colBody == body) continue;
+
+            if (areColliding(*colBody, *body)) {
+                processCollision(*colBody, *body);
+            }
+        }
 
         // Euler integration to update velocity vector
-        body.Velocity += body.Acceleration * dt;
+        body->Velocity += body->Acceleration * dt;
 
         // Euler integration to update position vector
-        body.Position += body.Velocity * dt * Speed;
+        body->Position += body->Velocity * dt * Speed;
         
-        /**
-         Uncomment to enable veclocity decay
-         *  // Natural exponential velocity decay: v(t) = v₀ * e^(-λt)
-         *  // λ (lambda) controls decay rate: higher = faster decay
-         *  float lambda = 0.4f;  // Adjust this for desired decay speed (0.1 = slow, 1.0 = fast)
-         *  float decayFactor = glm::exp(-lambda * dt);
-         *  body.Velocity *= decayFactor;
-         */
+        // Natural exponential velocity decay: v(t) = v₀ * e^(-λt)
+        // λ (lambda) controls decay rate: higher = faster decay
+        if (!isZero(body->Velocity)) {
+            float vLambda = 0.5f;  // Adjust this for desired decay speed (0.1 = slow, 1.0 = fast)
+            float vDecayFactor = glm::exp(-vLambda * dt);
+            body->Velocity *= vDecayFactor;
+        }
+
+        if (!isZero(body->Acceleration)) {
+            float aLambda = 0.9f;
+            float aDecayFactor(glm::exp(-aLambda * dt));
+            body->Acceleration *= aDecayFactor;
+        }
 
         // End simulation if particle crosses the boundary
-        if (body.Position.x >= 20.0f) {
+        if (body->Position.x >= 20.0f) {
             endSim = true;
             break;
         }
@@ -42,6 +62,18 @@ bool Physics::shouldClose() {
 
 void Physics::push(Body& sphere, glm::vec3 force) {
     sphere.Force += force;
+    sphere.Velocity += sphere.Force / sphere.Mass;
+}
+
+bool Physics::isZero(glm::vec3& vector) {
+    if (vector == glm::vec3(0)) return true;
+
+    bool zero = glm::all(glm::epsilonEqual(vector, glm::vec3(0), glm::vec3(EPSILON)));
+    if (zero) {
+        vector = glm::vec3(0);
+    }
+
+    return zero;
 }
 
 bool Physics::areColliding(Body& sphereOne, Body& sphereTwo) {
@@ -58,28 +90,12 @@ bool Physics::areColliding(Body& sphereOne, Body& sphereTwo) {
 }
 
 void Physics::processCollision(Body& sphereOne, Body& sphereTwo) {
-    glm::vec3 collisionNormal = glm::normalize(sphereTwo.Position - sphereOne.Position);
 
-    float oneCollisionVel = glm::dot(sphereOne.Velocity, collisionNormal);
-    float twoCollisionVel = glm::dot(sphereTwo.Position, collisionNormal);
+    glm::vec3 velOne = (((sphereOne.Mass - sphereTwo.Mass) * sphereOne.Velocity) + ((sphereTwo.Mass + sphereTwo.Mass) * sphereTwo.Velocity)) / (sphereOne.Mass + sphereTwo.Mass);
+    glm::vec3 velTwo = (((sphereOne.Mass + sphereTwo.Mass) * sphereOne.Velocity) + ((sphereTwo.Mass - sphereOne.Mass) * sphereTwo.Velocity)) / (sphereOne.Mass + sphereTwo.Mass);
 
-    float newOneVel = 
-        (oneCollisionVel * 
-            ((sphereOne.Mass - sphereTwo.Mass) / (sphereOne.Mass + sphereTwo.Mass))) + 
-        (twoCollisionVel * 
-            ((2 * sphereTwo.Mass) / (sphereOne.Mass + sphereTwo.Mass)));
-
-    float newTwoVel = 
-        (oneCollisionVel * 
-            ((2 * sphereOne.Mass) / (sphereOne.Mass + sphereTwo.Mass))) + 
-        (twoCollisionVel * 
-            ((sphereTwo.Mass - sphereOne.Mass) / (sphereOne.Mass + sphereTwo.Mass)));
-
-    glm::vec3 impulseOne = collisionNormal * (newOneVel - oneCollisionVel);
-    glm::vec3 impulseTwo = collisionNormal * (newTwoVel - twoCollisionVel);
-
-    sphereOne.Velocity += impulseOne;
-    sphereTwo.Velocity += impulseTwo;
+    sphereOne.Velocity = velOne;
+    sphereTwo.Velocity = velTwo;
 }
 
 double Physics::getDistance(Body& sphereOne, Body& sphereTwo) {

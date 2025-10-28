@@ -45,7 +45,7 @@ void Renderer::drawSurface(Surface& surface) {
 }
  
 // Main render loop
-void Renderer::RenderFrame(std::vector<Body>& bodies) {
+void Renderer::RenderFrame(std::vector<Body*> bodies) {
 
     // Frame timing
     float currentFrame = (float)glfwGetTime();
@@ -79,14 +79,14 @@ void Renderer::RenderFrame(std::vector<Body>& bodies) {
     }
 
     // Draw all spheres
-    for(Body body : bodies) {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), body.Position);
-        ourShader.setBool("source", body.sphere.mesh.source);
-        ourShader.setBool("inactive", body.sphere.mesh.inactive);
-        ourShader.setVec3("inColor", body.sphere.Color);
+    for(Body* body : bodies) {
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), body->Position);
+        ourShader.setBool("source", body->sphere.mesh.source);
+        ourShader.setBool("inactive", body->sphere.mesh.inactive);
+        ourShader.setVec3("inColor", body->sphere.Color);
         ourShader.setMat4("model", model);
-        glBindVertexArray(body.sphere.mesh.VAO);
-        glDrawElements(GL_TRIANGLES, body.sphere.mesh.indexCount, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(body->sphere.mesh.VAO);
+        glDrawElements(GL_TRIANGLES, body->sphere.mesh.indexCount, GL_UNSIGNED_INT, 0);
     }
 
     if (baseSurface) {
