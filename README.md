@@ -222,21 +222,6 @@ Surface3D dual-mode rendering:
 - [x] Distance softening for numerical stability
 - [x] Resting state detection
 
-### Near Term
-- [ ] RK4/Verlet integrator for improved accuracy
-- [ ] ImGui overlay for runtime parameter tuning (mass, G, dt, colors)
-- [ ] Trajectory trails (line buffer for motion history)
-- [ ] Energy/momentum conservation diagnostics
-- [ ] Multiple collision iterations per frame
-
-### Long Term  
-- [ ] Spatial partitioning (octree/BVH) for O(n log n) broadphase
-- [ ] Instanced rendering for 1000+ body support
-- [ ] Multiple light sources with attenuation
-- [ ] Data export (CSV trajectories, energy graphs, JSON scenarios)
-- [ ] Adaptive timestep with error control
-- [ ] Explicit surface normals for proper lighting
-
 ## Troubleshooting
 
 **Blank screen?**
@@ -262,15 +247,6 @@ Surface3D dual-mode rendering:
 **Wireframe not showing?**
 - Call `surface.setWireframe(true)` before `drawSurface()`
 - Check `surface.mesh.isWireframe` flag propagates to renderer
-
-## Future Enhancements
-1. **Verlet/RK4 integration**: Better energy conservation and numerical stability
-2. **Multi-light support**: Array of light sources with distance attenuation
-3. **Parameter UI**: ImGui panels for mass, G, dt, color adjustments
-4. **Trajectory visualization**: Circular buffer + line strip rendering for paths
-5. **Screenshot/recording**: Frame capture for analysis/presentation
-6. **Scenario loader**: JSON/config files for initial conditions
-7. **Collision islands**: Skip processing for resting/static groups
 
 ## License
 GNU General Public License v3.0 — see [LICENSE](LICENSE)
