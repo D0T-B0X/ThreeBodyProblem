@@ -6,9 +6,9 @@ This is learning project meant to help me understand the basics of simulation re
 
 Star the repo if you think this is cool!
 
-## Demo Vide
+## Demo Video
 
-<video src='https://youtu.be/5YRPzDamcXk' width=180/>
+<video src='https://youtu.be/5YRPzDamcXk' width=180> </video>
 
 ## Overview
 A comprehensive implementation demonstrating:
