@@ -8,7 +8,7 @@ Star the repo if you think this is cool!
 
 ## Demo Vide
 
-![](https://youtu.be/5YRPzDamcXk)
+<video src='https://youtu.be/5YRPzDamcXk' width=180/>
 
 ## Overview
 A comprehensive implementation demonstrating:
