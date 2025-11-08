@@ -2,6 +2,10 @@
 
 Real-time OpenGL 4.3 simulation visualizing N-body gravitational dynamics with custom renderer and physics engine. Features Newtonian gravity, elastic collisions, surface interactions, and procedural geometry.
 
+This is learning project meant to help me understand the basics of simulation rendering and physics. Feel free to fork this project and customize it to your liking. 
+
+Star the repo if you think this is cool!
+
 ## Overview
 A comprehensive implementation demonstrating:
 - **Modern OpenGL rendering** (core profile 4.3+)
