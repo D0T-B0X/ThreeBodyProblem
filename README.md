@@ -6,6 +6,10 @@ This is learning project meant to help me understand the basics of simulation re
 
 Star the repo if you think this is cool!
 
+## Demo Vide
+
+![](https://youtu.be/5YRPzDamcXk)
+
 ## Overview
 A comprehensive implementation demonstrating:
 - **Modern OpenGL rendering** (core profile 4.3+)

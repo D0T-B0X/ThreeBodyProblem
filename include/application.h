@@ -72,7 +72,7 @@ public:
                 accumulator += frameTime;
 
                 // Demo: Apply impulse to red ball after 2 seconds (at 60Hz physics)
-                if (timeCount == 121) {
+                if (timeCount == 363) {
                     pEngine.push(ball_one, glm::vec3(multiplier * 1.0f, multiplier * -0.7071f, 0.0f));
                     pEngine.push(ball_two, glm::vec3(multiplier * -0.7071f, multiplier * -0.7071f, 0.0f));
                     pEngine.push(ball_three, glm::vec3(multiplier * 0.7071f, multiplier * 0.7071f, 0.0f));

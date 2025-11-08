@@ -2,7 +2,7 @@
 
 // Constructor: set initial camera position and timing values
 Renderer::Renderer() 
-    : camera(glm::vec3(0.0f, 14.0f, 15.0f), glm::vec3(0.0f, 14.0f, -1.0f)),
+    : camera(glm::vec3(0.0f, 24.0f, 15.0f), glm::vec3(0.0f, 24.0f, -1.0f)),
       window(nullptr),
       deltaTime(0.0f) {
     
