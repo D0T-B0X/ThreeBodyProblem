@@ -8,7 +8,7 @@ Star the repo if you think this is cool!
 
 ## Demo Video
 
-<video src='https://youtu.be/5YRPzDamcXk' width=180> </video>
+![Watch the demo here!](https://youtu.be/5YRPzDamcXk)
 
 ## Overview
 A comprehensive implementation demonstrating:
