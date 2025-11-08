@@ -27,15 +27,18 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include <iostream>
+#include <future>
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
 #include "body.h"
 
 // Global physics constants and parameters
-inline float dt;                                   ///< Physics timestep (seconds per frame)
-inline constexpr double GRAV_CONST = 6.67430e-11;  ///< Gravitational constant (N⋅m²/kg²)
-inline constexpr double EPSILON = 1e-2;            ///< Numerical tolerance for zero comparisons
+inline float dt;                                                      ///< Physics timestep (seconds per frame)
+inline constexpr double GRAV_CONST = 6.67430e-11;                     ///< Gravitational constant (N⋅m²/kg²)
+inline constexpr glm::vec3 GRAV_FORCE = glm::vec3(0.0f, 0.0f, 0.0f); ///< Earth's gravitational force
+inline constexpr double EPSILON = 1e-3;                               ///< Numerical tolerance for zero comparisons
 
 class Physics {
 public:
@@ -82,6 +85,8 @@ public:
      * @param force Force vector in Newtons (direction and magnitude)
      */
     void push(Body& sphere, glm::vec3 force);
+
+    void wait(float sec);
 
     /**
      * @brief Execute one physics timestep for all bodies in the simulation.
@@ -135,6 +140,18 @@ private:
      */
     bool isZero(glm::vec3& vector);
 
+    void updateState(Body& body);
+
+    float calculateDistanceSquare(Body& sphereOne, Body& sphereTwo);
+
+    void calculateGravForce(Body& sphereOne, Body& sphereTwo);
+
+    void calculateForce(Body& body);
+
+    bool onSurface(Body& body);
+
+    void processSurfaceCollision(Body& body);
+
     /**
      * @brief Detect collision between two spherical bodies.
      * 
@@ -174,22 +191,6 @@ private:
      * @return Distance between body centers in world units
      */
     double getDistance(Body& sphereOne, Body& sphereTwo);
-
-    /**
-     * @brief Calculate gravitational force magnitude between two bodies.
-     * 
-     * Uses Newton's law of universal gravitation:
-     * F = G * (m₁ * m₂) / r²
-     * 
-     * Where G is the gravitational constant, m₁ and m₂ are the masses,
-     * and r is the distance between centers. Returns only the magnitude;
-     * direction must be calculated separately from position vectors.
-     * 
-     * @param sphereOne First body (attracts sphereTwo)
-     * @param sphereTwo Second body (attracts sphereOne)
-     * @return Gravitational force magnitude in Newtons
-     */
-    double gravForce(Body& sphereOne, Body& sphereTwo);
-};
+}; 
 
 #endif

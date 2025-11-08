@@ -39,7 +39,7 @@
 
 class App{
 public:
-    App() : accumulator(0.0f) { }
+    App() : accumulator(0.0f), timeCount(0) { }
 
     /**
      * @brief Main application loop - orchestrates rendering and physics
@@ -60,28 +60,33 @@ public:
      * twice per render frame to maintain temporal accuracy.
      */
     void run() {
- 
+
         setupProgram();
 
-        while(!rEngine.shouldClose()) {
-            // Time taken between two consecutive frames
-            double frameTime = rEngine.getFrameTime();
-            accumulator += frameTime;
+        float multiplier = 2.0f;
 
-            // Demo: Apply impulse to red ball after 2 seconds (at 60Hz physics)
-            if (timeCount == 240) {
-                pEngine.push(ball_one, glm::vec3(2.0f, 1.0f, -1.0f));
-                pEngine.push(ball_two, glm::vec3(-1.0f, 0.0f, 0.0f));
-                pEngine.push(ball_three, glm::vec3(1.0f, 0.0f, 0.0f));
+        while(!rEngine.shouldClose() && !pEngine.shouldClose()) {
+            if (timeCount > 120) {
+                // Time taken between two consecutive frames
+                double frameTime = rEngine.getFrameTime();
+                accumulator += frameTime;
+
+                // Demo: Apply impulse to red ball after 2 seconds (at 60Hz physics)
+                if (timeCount == 121) {
+                    pEngine.push(ball_one, glm::vec3(multiplier * 1.0f, multiplier * -0.7071f, 0.0f));
+                    pEngine.push(ball_two, glm::vec3(multiplier * -0.7071f, multiplier * -0.7071f, 0.0f));
+                    pEngine.push(ball_three, glm::vec3(multiplier * 0.7071f, multiplier * 0.7071f, 0.0f));
+                }
+
+                // Fixed timestep physics loop: process physics at constant rate
+                // regardless of rendering frame rate (ensures determinism)
+                while (accumulator >= dt) {
+
+                    pEngine.processFrame(bodies);
+                    accumulator -= dt;
+                }            
             }
-
-            // Fixed timestep physics loop: process physics at constant rate
-            // regardless of rendering frame rate (ensures determinism)
-            while (accumulator >= dt) {
-                timeCount++;
-                pEngine.processFrame(bodies);
-                accumulator -= dt;
-            }            
+            timeCount++;
             rEngine.RenderFrame(bodies);
         }
 
@@ -91,7 +96,7 @@ public:
 private:
     // Core subsystems
     Renderer rEngine;            ///< OpenGL rendering engine (camera, shaders, draw calls)
-    Physics pEngine = Physics(); ///< Physics engine (integration, forces, collisions)
+    Physics pEngine;             ///< Physics engine (integration, forces, collisions)
 
     // Scene objects
     std::vector<Body*> bodies;    ///< All physical bodies in the simulation (rendered + physics)
@@ -107,40 +112,44 @@ private:
     Body ball_three;             ///< Blue sphere (positioned at equilateral triangle vertex)
     Body light;                  ///< White emissive sphere (acts as point light source)
     Surface surface;             ///< Ground plane with wireframe grid visualization
+    Surface wallOne = Surface(2.0f, 50.0f, surfaceOrientation::X);
+    Surface wallTwo;
+    Surface wallThree;
 
     void setupProgram() {
         
         // === Red Ball Configuration ===
-        ball_one.sphere.Name = "Ball One";                   // Debug identifier for logging/errors
+        ball_one.sphere.Name = "Red ball";                   // Debug identifier for logging/errors
         ball_one.sphere.mesh.source = false;                 // Not a light source (receives lighting)
         ball_one.sphere.Color = {1.0f, 0.0f, 0.0f};          // Pure red diffuse color
         ball_one.setRadius(0.5f);                            // 0.5 unit radius sphere
-        ball_one.Position = glm::vec3(0.0f, 2.0f, -2.0f);    // Top vertex, elevated 2 units
-        ball_one.Mass = 1.0f;                                // 1 kg mass (arbitrary unit)
-        ball_one.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     // Initially at rest
-        ball_one.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); // No forces applied yet
-        ball_one.Force = glm::vec3(0.0f, 0.0f, 0.0f);        // Force accumulator starts at zero
-        bodies.push_back(&ball_one);                          // Register with simulation
+        ball_one.Position = glm::vec3(0.0f, 2 * 18.0f, -2.0f);   // Top vertex of equilateral triangle
+        ball_one.Mass = 30e11f;                              // 30e11 kg mass
+        ball_one.Velocity = glm::vec3(0);                    // Initially at rest
+        ball_one.Acceleration = glm::vec3(0);                // No forces applied yet
+        ball_one.Force = glm::vec3(0);                       // Force starts at zero
+        ball_one.vForceAccumulator = glm::vec3(0);           // Stores all non natural forces
+        bodies.push_back(&ball_one);                         // Register with simulation
 
         // === Green Ball Configuration ===
-        ball_two.sphere.Name = "Ball Two";
+        ball_two.sphere.Name = "Green ball";
         ball_two.sphere.mesh.source = false;
         ball_two.sphere.Color = {0.0f, 1.0f, 0.0f};          // Pure green diffuse color
         ball_two.setRadius(0.5f);
-        ball_two.Position = glm::vec3(1.7320508075f, -1.0f, -2.0f); // Right vertex (√3 ≈ 1.732)
-        ball_two.Mass = 1.0f;                               
+        ball_two.Position = glm::vec3(2 * 8.66f, 2 * 10.0f, -2.0f);  // Right vertex (10 * √3/2 ≈ 8.66)
+        ball_two.Mass = 30e11f;                               
         ball_two.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     
         ball_two.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
         ball_two.Force = glm::vec3(0.0f, 0.0f, 0.0f);      
         bodies.push_back(&ball_two);
 
         // === Blue Ball Configuration ===
-        ball_three.sphere.Name = "Ball Three";
+        ball_three.sphere.Name = "Blue ball";
         ball_three.sphere.mesh.source = false;
         ball_three.sphere.Color = {0.0f, 0.0f, 1.0f};        // Pure blue diffuse color
         ball_three.setRadius(0.5f);
-        ball_three.Position = glm::vec3(-1.7320508075f, -1.0f, -2.0f); // Left vertex (-√3)
-        ball_three.Mass = 1.0f;                                
+        ball_three.Position = glm::vec3(2 * -8.66f, 2 * 10.0f, -2.0f); // Left vertex (-10 * √3/2 ≈ -8.66)
+        ball_three.Mass = 30e11f;                                
         ball_three.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);     
         ball_three.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
         ball_three.Force = glm::vec3(0.0f, 0.0f, 0.0f);        
@@ -154,7 +163,7 @@ private:
         light.Position = glm::vec3(0.0f, 0.0f, 4.0f);        // Behind camera/above scene
         light.Mass = 1.0f;                                
         light.Velocity = glm::vec3(0.0f, 0.0f, 0.0f);        // Stationary light source
-        light.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f); 
+        light.Acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
         light.Force = glm::vec3(0.0f, 0.0f, 0.0f);       
         bodies.push_back(&light);
 
@@ -165,12 +174,18 @@ private:
 
         // === Ground Surface Configuration ===
         surface.color = glm::vec3(0.5f, 0.5f, 0.5f);     // Medium gray for neutral reference
-        surface.setSize(40.0f);                          // 40×40 unit plane (width × height)
+        surface.setSize(100.0f);                          // 40×40 unit plane (width × height)
         surface.setWireframe(true);                      // Render as grid lines (not filled quads)
-        surface.setGridDensity(10, 10);                  // 10×10 grid (11 lines each direction)
+        surface.setGridDensity(20, 20);                  // 10×10 grid (11 lines each direction)
         surface.mesh.inactive = true;                    // Unlit surface (no Blinn-Phong shading)
-        surface.setDistance(-2.0f);                      // Plane at y = -2 (below spheres)
+        surface.setDistance(-2.0f);                      // Plane at y = -2 (below origin)
 
+        wallOne.color = glm::vec3(0.0f, 0.5f, 0.5f);
+        wallOne.setSize(50.0f);
+        wallOne.setWireframe(false);
+        wallOne.mesh.inactive = true;
+
+        rEngine.drawSurface(wallOne);
         rEngine.drawSurface(surface);
     }
 

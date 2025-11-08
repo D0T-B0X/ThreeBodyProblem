@@ -22,7 +22,6 @@ struct Sphere {
     Sphere3D     geometry;          // Procedural vertex/index data (CPU side)
     Mesh         mesh;              // Uploaded GPU buffers (lazy created)
     glm::vec3    Color{1.0f};       // Base albedo / emissive tint
-    glm::vec3    Position{0.0f};    // World position (no rotation/scale here)
     std::string  Name;              // Debug name
 
     // Default: unit radius sphere
@@ -32,7 +31,7 @@ struct Sphere {
         : geometry(radius), Name(name), Color(color) {}
 
     Sphere(std::string& name, float radius, glm::vec3 color, glm::vec3 lighting)
-        : geometry(radius), Name(name), Color(color), Position(lighting) {}
+        : geometry(radius), Name(name), Color(color) {}
 
     // Mark geometry dirty when parameters change
     void setRadius(float radius) {

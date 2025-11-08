@@ -187,7 +187,7 @@ private:
      * Used to extract lightColor uniform for Blinn-Phong calculations.
      * Remains nullptr if no light source is registered.
      */
-    Sphere* lightSphere = nullptr;
+    Body* lightSphere = nullptr;
     
     /**
      * @brief Pointer to the base surface (ground plane or grid) if one exists

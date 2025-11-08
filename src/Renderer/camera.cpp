@@ -3,17 +3,24 @@
 // Constructs a camera from position, up vector, yaw, and pitch
 Camera::Camera(
     glm::vec3 position, 
+    glm::vec3 target,
     glm::vec3 up, 
     float yaw, 
     float pitch
     ) : 
-    Front(glm::vec3(0.0f, 0.0f, -1.0f)),
+    Front(0.0f, 0.0f, -1.0f),
     MovementSpeed(SPEED),
     MouseSensitivity(SENSITIVITY)
     {
         // Set initial state and compute orientation vectors
         Position = position;
         WorldUp = up;
+
+        glm::vec3 direction = glm::normalize(target - position);
+
+        yaw = glm::degrees(atan2(direction.z, direction.x));
+        pitch = glm::degrees(asin(direction.y));
+
         Yaw = yaw;
         Pitch = pitch;
         updateCameraVectors();

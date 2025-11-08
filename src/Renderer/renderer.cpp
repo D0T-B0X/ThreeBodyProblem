@@ -2,7 +2,7 @@
 
 // Constructor: set initial camera position and timing values
 Renderer::Renderer() 
-    : camera(glm::vec3(0.0f, 0.0f, 3.0f)),
+    : camera(glm::vec3(0.0f, 14.0f, 15.0f), glm::vec3(0.0f, 14.0f, -1.0f)),
       window(nullptr),
       deltaTime(0.0f) {
     
@@ -33,10 +33,9 @@ void Renderer::drawSphere(Body& body) {
         body.sphere.geometry.setRadius(1.0f);
     }
 
-    body.sphere.Position = body.Position;
     setupSphereVertexBuffer(body.sphere);       // uploads only if VAO==0 or mesh.remake==true
     spheres.push_back(&(body.sphere));
-    if (body.sphere.mesh.source) lightSphere = &(body.sphere); // remember light source sphere
+    if (body.sphere.mesh.source) lightSphere = &body; // remember light source sphere
 }
 
 void Renderer::drawSurface(Surface& surface) {
@@ -72,8 +71,8 @@ void Renderer::RenderFrame(std::vector<Body*> bodies) {
 
     // set the emissive sphere color if one exists, default to 1 if not
     if (lightSphere) {
-        Sphere* s = lightSphere;
-        ourShader.setVec3("lightColor", s->Color);
+        Body* s = lightSphere;
+        ourShader.setVec3("lightColor", s->sphere.Color);
     } else {
         ourShader.setVec3("lightColor", glm::vec3(1.0f));
     }
